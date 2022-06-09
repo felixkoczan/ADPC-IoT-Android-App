@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="6sp">
+
+    <TextView
+        android:id="@+id/device"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:useDefaultMargins="true">
+
+        <TextView
+            style="@style/GridLayoutTitleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+
+            android:text="@string/label_device_name"/>
+
+        <TextView
+            android:id="@+id/deviceName"
+            style="@style/GridLayoutDataTextView"/>
+
+        <TextView
+            style="@style/GridLayoutTitleTextView"
+            android:layout_width="wrap_content"
+            android:visibility="invisible"
+
+            android:layout_height="wrap_content"
+            android:text="@string/label_device_address"/>
+
+        <TextView
+            android:id="@+id/deviceAddress"
+            style="@style/GridLayoutDataTextView"/>
+
+        <TextView
+            style="@style/GridLayoutTitleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+
+            android:text="@string/label_device_class"/>
+
+        <TextView
+            android:id="@+id/deviceClass"
+            style="@style/GridLayoutDataTextView"/>
+
+        <TextView
+            style="@style/GridLayoutTitleTextView"
+            android:layout_width="wrap_content"
+            android:visibility="invisible"
+
+            android:layout_height="wrap_content"
+            android:text="@string/label_device_major_class"/>
+
+        <TextView
+            android:id="@+id/deviceMajorClass"
+            style="@style/GridLayoutDataTextView"/>
+
+        <TextView
+            style="@style/GridLayoutTitleTextView"
+            android:visibility="invisible"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_device_services"/>
+
+        <TextView
+            android:id="@+id/deviceServiceList"
+            style="@style/GridLayoutDataTextView"/>
+
+        <TextView
+            style="@style/GridLayoutTitleTextView"
+            android:visibility="invisible"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_bonding_state"/>
+
+        <TextView
+            android:id="@+id/deviceBondingState"
+            style="@style/GridLayoutDataTextView"/>
+    </GridLayout>
+
+</LinearLayout>
