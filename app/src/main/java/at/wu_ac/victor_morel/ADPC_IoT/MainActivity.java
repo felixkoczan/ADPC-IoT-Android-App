@@ -10,8 +10,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -44,17 +42,12 @@ import com.anthonycr.grant.PermissionsResultAction;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import at.wu_ac.victor_morel.ADPC_IoT.Model.Entity.PilotPolicy;
 import at.wu_ac.victor_morel.ADPC_IoT.Model.PilotPolicyViewModel;
@@ -96,6 +89,8 @@ public class MainActivity extends AppCompatActivity
     private String receivedADPC;
     private PilotPolicy tmpPolicy;
     private String tmpADPC;
+    private HashMap<String, String> purposes;
+    public static HashMap<String, Boolean> consents;
 
     private PilotPolicy myPolicy = null;
 
@@ -145,12 +140,12 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton addWatch = (FloatingActionButton) findViewById(R.id.watch);
-        addWatch.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton sendConsent = (FloatingActionButton) findViewById(R.id.consent_button);
+        sendConsent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                additionalDevice = "C7:32:E9:C1:34:29";
-                Snackbar.make(v, "Your smartwatch is now bonded", Snackbar.LENGTH_LONG)
+                sendConsent();
+                Snackbar.make(v, "You communicated your consents", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -171,6 +166,7 @@ public class MainActivity extends AppCompatActivity
 
         PolicyEngine.retrievedPolicies = new HashMap<>(); //utility?
         PolicyEngine.retrievedPolicy = new HashMap<>(); //utility?
+        consents = new HashMap<>();
 
         // Get a handle to the RecyclerView.
         mRecyclerView = findViewById(R.id.recyclerview);
@@ -180,41 +176,6 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.setAdapter(mAdapter);
 // Give the RecyclerView a default layout manager.
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-//        mAdapter.setOnItemClickListener(new BLEDeviceListAdapter.ClickListener() {
-//            @Override
-//            public void onItemClick(View v, int position) {
-//
-//                try {
-//                    myPolicy = policyViewModel.getActivePolicy();
-//                } catch (ExecutionException e) {
-//                    e.printStackTrace();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                if (PolicyEngine.comparePolicies(receivedPolicy, myPolicy)) {
-//                    if (sendConsent()) {
-//                        Snackbar.make(v, "Consent sent", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                    } else {
-//                        Snackbar.make(v, "Too far to send consent", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                    }
-//
-//                } else {
-//                    if (PolicyEngine.intersectionPolicies(receivedPolicy, myPolicy) != null) {
-//                        if (sendPmin(myPolicy)) {
-//                            Snackbar.make(v, "Negotiation started", Snackbar.LENGTH_LONG)
-//                                    .setAction("Action", null).show();
-//                        }
-//                    } else {
-//                        Snackbar.make(v, "Policies do not match", Snackbar.LENGTH_LONG)
-//                                .setAction("Action", null).show();
-//                    }
-//                }
-//            }
-//        });
 
         mAdapter.setOnItemClickListener(new BLEDeviceListAdapter.ClickListener() {
             @Override
@@ -235,10 +196,6 @@ public class MainActivity extends AppCompatActivity
         mScanner = new BluetoothLeScanner(mLeScanCallback, mBluetoothUtils);
         gattServiceIntent = new Intent(this, BluetoothLeService.class);
 
-//        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-//        bluetoothAdapter = bluetoothManager.getAdapter();
-//        bluetoothAdapter.enable();
-//        bleScanner = bluetoothAdapter.getBluetoothLeScanner();
     }
 
     private boolean sendConsent() {
@@ -255,142 +212,16 @@ public class MainActivity extends AppCompatActivity
                         for (BluetoothGattCharacteristic gattCharac : BGC) {
                             if (gattCharac.getUuid().toString().equals("beb5483e-36e1-4688-b7f5-ea07361b26a8")) { // ::Consent::{30:AE:A4:84:5F:0A},11a3e229084349bc25d97e29393ced1d\n
                                 String s = "ADPC: consent=";
-                                s += "\" q1analytics \"" + "\n";
-                                gattCharac.setValue(s);
+                                for (Map.Entry me : purposes.entrySet()) {
+                                    if(consents.containsKey((String) me.getValue())){
+                                        if(consents.get((String) me.getValue())){
+                                            s+= me.getKey() + " ";
+                                        }
+                                    }
+                                }
+                                gattCharac.setValue(s.substring(0, s.length()-1));
                                 boolean consent = mBluetoothLeService.mBluetoothGatt.writeCharacteristic(gattCharac);
                                 Log.i("test_demo", String.valueOf(consent));
-                            }
-                        }
-                    }
-                }
-                mBluetoothLeService.disconnect();
-            }
-        };
-
-        Handler h = new Handler();
-        try {
-            h.postDelayed(r, 2000);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-//    private boolean sendConsent() {
-//        Log.i("test_demo", "before connection");
-//        mBluetoothLeService.connect("30:AE:A4:84:5F:0A");
-//        Runnable r = new Runnable() {
-//            @Override
-//            public void run() {
-//                BGS = mBluetoothLeService.getSupportedGattServices();
-//                for (BluetoothGattService gattService : BGS) {
-//                    if (gattService.getUuid().toString().equals("4fafc201-1fb5-459e-8fcc-c5c9c331914b")) {
-//                        Log.i("test_demo", "when uuid found");
-//                        List<BluetoothGattCharacteristic> BGC = gattService.getCharacteristics();
-//                        for (BluetoothGattCharacteristic gattCharac : BGC) {
-//                            if (gattCharac.getUuid().toString().equals("beb5483e-36e1-4688-b7f5-ea07361b26a8")) { // ::Consent::{30:AE:A4:84:5F:0A},11a3e229084349bc25d97e29393ced1d\n
-//                                String s = "::Consent::";
-//                                PilotPolicyProto.PilotPolicy.Builder pol = PolicyEngine.policyModelToBuilder(receivedPolicy);
-//                                if (additionalDevice != null) {
-//                                    try {
-//                                        MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-//                                        messageDigest.update(JsonFormat.printer().print(pol).getBytes());
-//                                        byte[] digest = messageDigest.digest();
-//                                        String hash = PolicyEngine.byteArrayToHex(digest);
-//                                        Log.i("deijdjeid", hash);
-//                                        s += "{84:CF:BF:8A:99:21," + additionalDevice + "}," + hash + "\n";
-//                                        gattCharac.setValue(s);
-////                                Log.i("deijdjeid", JsonFormat.printer().print(pol));
-//                                    } catch (InvalidProtocolBufferException e) {
-//                                        e.printStackTrace();
-//                                    } catch (NoSuchAlgorithmException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                } else {
-//                                    try {
-//                                        MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-//                                        messageDigest.update(JsonFormat.printer().print(pol).getBytes());
-//                                        byte[] digest = messageDigest.digest();
-//                                        String hash = PolicyEngine.byteArrayToHex(digest);
-//                                        Log.i("deijdjeid", hash);
-//                                        s += "{84:CF:BF:8A:99:21}," + hash + "\n";
-//                                        gattCharac.setValue(s);
-////                                Log.i("deijdjeid", JsonFormat.printer().print(pol));
-//                                    } catch (InvalidProtocolBufferException e) {
-//                                        e.printStackTrace();
-//                                    } catch (NoSuchAlgorithmException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                                boolean consent = mBluetoothLeService.mBluetoothGatt.writeCharacteristic(gattCharac);
-//                                Log.i("test_demo", String.valueOf(consent));
-//                            }
-//                        }
-//                    }
-//                }
-//                mBluetoothLeService.disconnect();
-//            }
-//        };
-//
-//        Handler h = new Handler();
-//        try {
-//            h.postDelayed(r, 2000);
-//            return true;
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
-
-/*    private String getMac() throws IOException {
-        try{
-            List<NetworkInterface> networkInterfaceList = Collections.list(NetworkInterface.getNetworkInterfaces());
-            String stringMac = "";
-            for(NetworkInterface networkInterface : networkInterfaceList)
-            {
-                if(networkInterface.getName().equalsIgnoreCase("wlon0"));
-                {
-                    for(int i = 0 ;i <networkInterface.getHardwareAddress().length; i++){
-                        String stringMacByte = Integer.toHexString(networkInterface.getHardwareAddress()[i]& 0xFF);
-                        if(stringMacByte.length() == 1)
-                        {
-                            stringMacByte = "0" +stringMacByte;
-                        }
-                        stringMac = stringMac + stringMacByte.toUpperCase() + ":";
-                    }
-                    break;
-                }
-            }
-            return stringMac;
-        }catch (SocketException e)
-        {
-            e.printStackTrace();
-        }
-        return  "0";
-    }*/
-
-    private boolean sendPmin(final PilotPolicy DSP) {
-        mBluetoothLeService.connect("30:AE:A4:84:5F:0A");
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                BGS = mBluetoothLeService.getSupportedGattServices();
-                for (BluetoothGattService gattService : BGS) {
-                    if (gattService.getUuid().toString().equals("4fafc201-1fb5-459e-8fcc-c5c9c331914b")) {
-                        List<BluetoothGattCharacteristic> BGC = gattService.getCharacteristics();
-                        for (BluetoothGattCharacteristic gattCharac : BGC) {
-                            if (gattCharac.getUuid().toString().equals("beb5483e-36e1-4688-b7f5-ea07361b26a8")) {
-                                //String s = PolicyEngine.policyModelToProto(intersection).toString();
-                                PilotPolicyProto.PilotPolicy.Builder pol = PolicyEngine.policyModelToBuilder(DSP);
-                                try {
-                                    String s = JsonFormat.printer().print(pol);
-//                                    s = s.substring(s.indexOf('\n')+1);
-//                                    s = s+"{";
-                                    Log.i("dede", s);
-                                    gattCharac.setValue("&" + s);
-                                    boolean consent = mBluetoothLeService.mBluetoothGatt.writeCharacteristic(gattCharac);
-                                } catch (InvalidProtocolBufferException e) {
-                                    e.printStackTrace();
-                                }
                             }
                         }
                     }
@@ -431,30 +262,29 @@ public class MainActivity extends AppCompatActivity
                             e.printStackTrace();
                         }
                         if (tmpADPC != null) {
-                            //if the policy is complete, store it and display it
-                            receivedADPC = tmpADPC;
+                            // if the policy is complete, store it and display it
+                            // here we parse the notice received, to store it in a hashmap
+                            purposes = PolicyEngine.parseADPCNotice(tmpADPC);
+
+                            // SUIOEHDHQWOQK
+
+
+                            //receivedADPC = tmpADPC;
                             idCurrentDCG = deviceLe.getAddress();
                             Log.i("dejkou", idCurrentDCG);
-                            deviceList.addLast(receivedADPC); //use devicestore instead
+
+                            for (Map.Entry me : purposes.entrySet()) {
+                                deviceList.addLast((String) me.getValue()); //use devicestore instead
+                                //consents.put((String) me.getValue(), false);
+                            }
+
+                            //deviceList.addLast(receivedADPC); //use devicestore instead
                             Log.i("heure après", String.valueOf(System.currentTimeMillis()));
                             mDeviceStore.addDevice(deviceLe);
                             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);    //we also bind the gatt service MAYBE TO CHANGE
 
-//                            try {
-//                                myPolicy = policyViewModel.getActivePolicy();
-//                            } catch (ExecutionException e) {
-//                                e.printStackTrace();
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
 
-//                            if (!PolicyEngine.comparePolicies(receivedPolicy, myPolicy)) {
-//                                notifyNewPolicyNotMatching(PolicyEngine.outerJoinPolicies(receivedPolicy, myPolicy));
-//                            }
                         }
-//                        testBLETable.put((int) byt[2], 1);
-//                        Log.i("BLE bytes2", String.valueOf(testBLETable));
-
                         mAdapter.notifyDataSetChanged();
                     }
                 }
@@ -462,60 +292,9 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "Channel test";
-            String description = "I have no idea why I have to set this field";
-            int importance = NotificationManager.IMPORTANCE_MAX;
-            NotificationChannel channel = new NotificationChannel("420", name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
 
-    public static PendingIntent getDismissIntent(int notificationId, Context context) { //useless
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intent.putExtra("1", notificationId);
-        PendingIntent dismissIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-        return dismissIntent;
-    }
 
-    private void notifyNewPolicyNotMatching(PilotPolicy intersection) {
-        createNotificationChannel();
 
-        // Create an explicit intent for an Activity in your app
-        Intent intentAddDynamic = new Intent(this, AddRuleActivity.class);
-        intentAddDynamic.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intentAddDynamic.putExtra(EXTRA_DATA_POLICY, intersection.getRules().get(0));
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intentAddDynamic, PendingIntent.FLAG_UPDATE_CURRENT);
-        //int notificationId = new Random().nextInt();
-        //PendingIntent dismissIntent = getDismissIntent(notificationId, this); //useless
-
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "420")
-                .setSmallIcon(R.drawable.ic_more)
-                .setContentTitle("New device")
-                .setContentText("We detected a new device whose policy does not match yours")
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("We detected a new device whose policy does not match yours. " +
-                                "The DC claims the benefits for you would be X and Y, " +
-                                "but in the end the decision is only yours to take."))
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
-                .addAction(R.drawable.ic_more, "Add rule", pendingIntent);
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-
-        // notificationId is a unique int for each notification that you must define
-        notificationManager.notify(0, mBuilder.build());
-
-    }
 
     private void startScanPrepare() {
         //
@@ -553,7 +332,7 @@ public class MainActivity extends AppCompatActivity
 //                filters.add(filter);
 //            }
 //        }
-//
+
 //        if (bleScanner != null) {
 //            ScanSettings settings = new ScanSettings.Builder().build();
 //            bleScanner.startScan(scanCallback);
@@ -634,65 +413,5 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-//    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-//    private final ScanCallback scanCallback = new ScanCallback() {
-//        @Override
-//        public void onScanResult(int callbackType, ScanResult result) {
-//            //printScanResult(result);
-//            if (result.getDevice().getAddress().equals("7C:DF:A1:DA:E4:3A")) {
-//                //will have to be changed to compare UUID instead
-//                //AdRecord adr = result.getScanRecord().getBytes();
-//                byte[] byt = result.getScanRecord().getBytes();
-//                //retrieve the advertisement data containing the fragmented policy
-//                try {
-//                    tmpPolicy = PolicyEngine.reconstitutePolicies(byt, result.getDevice().getAddress()); //try to reconstitute, return null if policy is uncomplete
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                if (tmpPolicy != null) {
-//                    //if the policy is complete, store it and display it
-//                    receivedPolicy = tmpPolicy;
-//                    idCurrentDCG = result.getDevice().getAddress();
-//                    Log.i("dejkou", idCurrentDCG);
-//                    deviceList.addLast(receivedPolicy.getPolicyAsString()); //use devicestore instead
-//                    Log.i("heure après", String.valueOf(System.currentTimeMillis()));
-//                    //mDeviceStore.addDevice(result.getDevice());
-//                    bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);    //we also bind the gatt service MAYBE TO CHANGE
-//
-//                    try {
-//                        myPolicy = policyViewModel.getActivePolicy();
-//                    } catch (ExecutionException e) {
-//                        e.printStackTrace();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                    if (!PolicyEngine.comparePolicies(receivedPolicy, myPolicy)) {
-//                        notifyNewPolicyNotMatching(PolicyEngine.outerJoinPolicies(receivedPolicy, myPolicy));
-//                    }
-//                }
-////                        testBLETable.put((int) byt[2], 1);
-////                        Log.i("BLE bytes2", String.valueOf(testBLETable));
-//
-//                mAdapter.notifyDataSetChanged();
-//            }
-//        }
-//
-//        @Override
-//        public void onBatchScanResults(List<ScanResult> results) {
-//            for (ScanResult r : results) {
-//                printScanResult(r);
-//            }
-//        }
-//
-//        @Override
-//        public void onScanFailed(int errorCode) {
-//        }
-//
-//        private void printScanResult(ScanResult result) {
-//            String id = result.getDevice() != null ? result.getDevice().getAddress() : "unknown";
-//            int tx = result.getScanRecord() != null ? result.getScanRecord().getTxPowerLevel() : 0;
-//        }
-//    };
 
 }

@@ -31,12 +31,12 @@
         app:srcCompat="@drawable/ic_scan" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/watch"
+        android:id="@+id/consent_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_margin="@dimen/fab_margin"
         android:clickable="true"
-        app:srcCompat="@drawable/ic_action_watch" />
+        app:srcCompat="@drawable/ic_consent_send" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -1,14 +1,19 @@
 package at.wu_ac.victor_morel.ADPC_IoT;
 
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.LinkedList;
+import java.util.Map;
 
 public class BLEDeviceListAdapter extends
         RecyclerView.Adapter<BLEDeviceListAdapter.DeviceViewHolder> {
@@ -45,6 +50,7 @@ public class BLEDeviceListAdapter extends
     public class DeviceViewHolder extends RecyclerView.ViewHolder {
         public final TextView deviceView;
         final BLEDeviceListAdapter mAdapter;
+        int position;
 
         public DeviceViewHolder(View itemView, BLEDeviceListAdapter adapter) {
             super(itemView);
@@ -57,6 +63,22 @@ public class BLEDeviceListAdapter extends
                 }
             });
 
+            itemView.findViewById(R.id.switch1).setOnClickListener(new View.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.N)
+                @Override
+                public void onClick(View view) {
+                    if(MainActivity.consents.containsKey((String) deviceView.getText())){
+                        if(MainActivity.consents.get((String) deviceView.getText())==true){
+                            MainActivity.consents.replace((String) deviceView.getText(), false);
+                        } else{
+                            MainActivity.consents.replace((String) deviceView.getText(), true);
+                        }
+                    } else{
+                        MainActivity.consents.put((String) deviceView.getText(), true);
+                    }
+                    System.out.println("Not crashed");
+                }
+            });
         }
     }
 

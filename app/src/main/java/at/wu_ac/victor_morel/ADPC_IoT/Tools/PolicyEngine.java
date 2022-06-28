@@ -3,6 +3,10 @@ package at.wu_ac.victor_morel.ADPC_IoT.Tools;
 import android.util.Log;
 import android.util.SparseArray;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -282,6 +286,28 @@ public class PolicyEngine {
 //        } else
 //            //if hashmap is not full, return null and wait a bit
             return null;
+    }
+
+    public static HashMap<String, String> parseADPCNotice (String fullNotice){
+        HashMap<String, String> purposes = new HashMap<>();
+        JSONArray jArray = null;
+        try {
+            jArray = new JSONArray(fullNotice);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        for (int i=0; i < jArray.length(); i++)
+        {
+            try {
+                JSONObject oneObject = jArray.getJSONObject(i);
+                // Pulling items from the array
+                purposes.put(oneObject.getString("id"), oneObject.getString("text"));
+            } catch (JSONException e) {
+                // Oops
+            }
+        }
+
+        return purposes;
     }
 
     public static String reconstitutePolicies(byte[] fragment, String addressDCG) throws IOException {

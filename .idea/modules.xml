@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/coiot.iml" filepath="$PROJECT_DIR$/.idea/coiot.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/coiot.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/coiot.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/adpc-iot.iml" filepath="$PROJECT_DIR$/.idea/modules/adpc-iot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/adpc-iot.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/adpc-iot.app.iml" />
     </modules>
   </component>
 </project>

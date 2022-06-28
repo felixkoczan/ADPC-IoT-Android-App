@@ -1,7 +1,6 @@
 <component name="libraryTable">
   <library name="Gradle: com.anthonycr.grant:permissions:1.0@aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/permissions-1.0.aar/4add291a896a7e8812b7e71967c7b5e0/jars/classes.jar!/" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/permissions-1.0.aar/4add291a896a7e8812b7e71967c7b5e0/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/permissions-1.0.aar/4add291a896a7e8812b7e71967c7b5e0/AndroidManifest.xml" />
     </CLASSES>
