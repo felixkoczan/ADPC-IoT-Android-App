@@ -49,8 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import at.wu_ac.victor_morel.ADPC_IoT.Model.Entity.PilotPolicy;
-import at.wu_ac.victor_morel.ADPC_IoT.Model.PilotPolicyViewModel;
 import at.wu_ac.victor_morel.ADPC_IoT.Tools.BluetoothLeDeviceStore;
 import at.wu_ac.victor_morel.ADPC_IoT.Tools.BluetoothLeScanner;
 import at.wu_ac.victor_morel.ADPC_IoT.Tools.BluetoothLeService;
@@ -62,16 +60,6 @@ import uk.co.alt236.bluetoothlelib.util.AdRecordUtils;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
-    protected RecyclerView mList;
-
-    public static final String EXTRA_DATA_UPDATE_POLICY = "extra_policy_to_be_updated";
-    public static final String EXTRA_DATA_POLICY = "extra_policy_to_be_added";
-
-    private PilotPolicyViewModel policyViewModel;
-    private String additionalDevice;
-
-    private String idCurrentDCG;
 
     private BluetoothUtils mBluetoothUtils;
     private BluetoothLeScanner mScanner;
@@ -85,18 +73,10 @@ public class MainActivity extends AppCompatActivity
     Intent gattServiceIntent = null;
 
     private HashMap<Integer, Integer> testBLETable = new HashMap<>();
-    private PilotPolicy receivedPolicy;
-    private String receivedADPC;
-    private PilotPolicy tmpPolicy;
     private String tmpADPC;
     private HashMap<String, String> purposes;
     public static HashMap<String, Boolean> consents;
 
-    private PilotPolicy myPolicy = null;
-
-    private BluetoothAdapter bluetoothAdapter;
-    private android.bluetooth.le.BluetoothLeScanner bleScanner;
-    private BluetoothGatt bleGatt;
     private final UUID[] mServiceUuids = {
             UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
     };
@@ -158,11 +138,6 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        //PolicyEngine.createExampleDCP();
-        PolicyEngine.createExampleDCP();
-
-        policyViewModel = ViewModelProviders.of(this).get(PilotPolicyViewModel.class);
-
 
         PolicyEngine.retrievedPolicies = new HashMap<>(); //utility?
         PolicyEngine.retrievedPolicy = new HashMap<>(); //utility?
@@ -257,7 +232,6 @@ public class MainActivity extends AppCompatActivity
                         //retrieve the advertisement data containing the fragmented policy
                         try {
                             tmpADPC = PolicyEngine.reconstitutePolicies(byt, deviceLe.getAddress());
-//                            tmpPolicy = PolicyEngine.reconstitutePolicies(byt, deviceLe.getAddress()); //try to reconstitute, return null if policy is uncomplete
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -266,24 +240,13 @@ public class MainActivity extends AppCompatActivity
                             // here we parse the notice received, to store it in a hashmap
                             purposes = PolicyEngine.parseADPCNotice(tmpADPC);
 
-                            // SUIOEHDHQWOQK
-
-
-                            //receivedADPC = tmpADPC;
-                            idCurrentDCG = deviceLe.getAddress();
-                            Log.i("dejkou", idCurrentDCG);
-
                             for (Map.Entry me : purposes.entrySet()) {
                                 deviceList.addLast((String) me.getValue()); //use devicestore instead
-                                //consents.put((String) me.getValue(), false);
                             }
 
-                            //deviceList.addLast(receivedADPC); //use devicestore instead
                             Log.i("heure après", String.valueOf(System.currentTimeMillis()));
                             mDeviceStore.addDevice(deviceLe);
                             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);    //we also bind the gatt service MAYBE TO CHANGE
-
-
                         }
                         mAdapter.notifyDataSetChanged();
                     }
@@ -297,7 +260,6 @@ public class MainActivity extends AppCompatActivity
 
 
     private void startScanPrepare() {
-        //
         // The COARSE_LOCATION permission is only needed after API 23 to do a BTLE scan
         //
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -387,17 +349,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_add_rule) {
-            Intent addRuleIntent = new Intent(this,
-                    AddRuleActivity.class);
-            startActivity(addRuleIntent);
-            // Handle the camera action
-        } else if (id == R.id.nav_visualize_policy) {
-            Intent visualizeIntent = new Intent(this,
-                    ViewPolicies.class);
-            startActivity(visualizeIntent);
-
-        } else if (id == R.id.nav_manage) {
+         if (id == R.id.nav_manage) {
             Intent settingsIntent = new Intent(this,
                     SettingsActivity.class);
             startActivity(settingsIntent);

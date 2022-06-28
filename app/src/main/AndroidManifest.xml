@@ -28,16 +28,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="at.wu_ac.victor_morel.ADPC_IoT.AddRuleActivity"
-            android:label="@string/title_activity_add_rule"
-            android:parentActivityName="at.wu_ac.victor_morel.ADPC_IoT.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name="at.wu_ac.victor_morel.ADPC_IoT.AddTransferRuleActivity"
-            android:label="@string/title_activity_add_transfer_rule"
-            android:parentActivityName="at.wu_ac.victor_morel.ADPC_IoT.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
+
         <activity
             android:name="at.wu_ac.victor_morel.ADPC_IoT.SettingsActivity"
             android:label="@string/title_activity_settings"
@@ -46,22 +37,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="at.wu_ac.victor_morel.ADPC_IoT.MainActivity" />
         </activity>
-
-        <activity
-            android:name="at.wu_ac.victor_morel.ADPC_IoT.ViewPolicies"
-            android:label="@string/title_activity_visualize_policies"
-            android:parentActivityName="at.wu_ac.victor_morel.ADPC_IoT.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="at.wu_ac.victor_morel.ADPC_IoT.MainActivity" />
-        </activity>
-
-        <activity
-            android:name="at.wu_ac.victor_morel.ADPC_IoT.VisualizePoliciesActivity"
-            android:label="@string/title_activity_visualize_policies"
-            android:parentActivityName="at.wu_ac.victor_morel.ADPC_IoT.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
 
         <service
             android:name="at.wu_ac.victor_morel.ADPC_IoT.Tools.BluetoothLeService"
