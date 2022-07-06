@@ -15,6 +15,7 @@ import android.widget.TextView;
 import java.util.LinkedList;
 import java.util.Map;
 
+// class used to display ADPC notices in what is called a RecyclerView (dynamic presentation)
 public class BLEDeviceListAdapter extends
         RecyclerView.Adapter<BLEDeviceListAdapter.DeviceViewHolder> {
     private final LinkedList<String> deviceList;
@@ -47,6 +48,7 @@ public class BLEDeviceListAdapter extends
         return deviceList.size();
     }
 
+    // to each ADPC purpose retrieved corresponds a device, for which we need to define a holder
     public class DeviceViewHolder extends RecyclerView.ViewHolder {
         public final TextView deviceView;
         final BLEDeviceListAdapter mAdapter;
@@ -63,17 +65,18 @@ public class BLEDeviceListAdapter extends
                 }
             });
 
+            // because a user should be able to consent granularly to each purpose, we define a switch button along each purpose
             itemView.findViewById(R.id.switch1).setOnClickListener(new View.OnClickListener() {
                 @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
                 public void onClick(View view) {
-                    if(MainActivity.consents.containsKey((String) deviceView.getText())){
-                        if(MainActivity.consents.get((String) deviceView.getText())==true){
-                            MainActivity.consents.replace((String) deviceView.getText(), false);
+                    if(MainActivity.consents.containsKey((String) deviceView.getText())){             // by default, the user has not consented, the field is therefore empty
+                        if(MainActivity.consents.get((String) deviceView.getText())==true){ // if the button is turned on
+                            MainActivity.consents.replace((String) deviceView.getText(), false); // we turn it off
                         } else{
-                            MainActivity.consents.replace((String) deviceView.getText(), true);
+                            MainActivity.consents.replace((String) deviceView.getText(), true); // otherwise we turn it on (enables indecision)
                         }
-                    } else{
+                    } else{ // clicking for the first time modifies the current state of consent for this purpose
                         MainActivity.consents.put((String) deviceView.getText(), true);
                     }
                     System.out.println("Not crashed");

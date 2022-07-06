@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity
             UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
     };
 
+    // function to connect the GATT service of the ESP32
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(final ComponentName componentName, final IBinder service) {
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-
+    // function called at the opening of the app
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,17 +110,18 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // creation of the scanning button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i("heure avant", String.valueOf(System.currentTimeMillis()));
                 startScanPrepare();
                 Snackbar.make(view, "Start scanning", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
 
+        // creation of the button for the communication of consent
         FloatingActionButton sendConsent = (FloatingActionButton) findViewById(R.id.consent_button);
         sendConsent.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -139,8 +141,10 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        PolicyEngine.retrievedPolicies = new HashMap<>(); //utility?
-        PolicyEngine.retrievedPolicy = new HashMap<>(); //utility?
+        // instantiation of datastructures later used for ADPC notices
+        PolicyEngine.retrievedPolicies = new HashMap<>();
+        PolicyEngine.retrievedPolicy = new HashMap<>();
+        // datastructure used to store the APDC id of purposes for which one consents when one clicks on the sendConsent button
         consents = new HashMap<>();
 
         // Get a handle to the RecyclerView.
@@ -155,17 +159,10 @@ public class MainActivity extends AppCompatActivity
         mAdapter.setOnItemClickListener(new BLEDeviceListAdapter.ClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                Log.i("test_click", "click to send consent");
-                if (sendConsent()) {
-                        Snackbar.make(v, "Consent sent", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                    } else {
-                        Snackbar.make(v, "Too far to send consent", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                    }
             }
         });
 
+        // declaration of various utilities
         mDeviceStore = new BluetoothLeDeviceStore();
         mBluetoothUtils = new BluetoothUtils(this);
         mScanner = new BluetoothLeScanner(mLeScanCallback, mBluetoothUtils);
@@ -173,6 +170,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    // function called when the sendConsent button is clicked
     private boolean sendConsent() {
         Log.i("test_demo", "before connection");
         mBluetoothLeService.connect("7C:DF:A1:DA:E4:3A");
@@ -187,6 +185,7 @@ public class MainActivity extends AppCompatActivity
                         for (BluetoothGattCharacteristic gattCharac : BGC) {
                             if (gattCharac.getUuid().toString().equals("beb5483e-36e1-4688-b7f5-ea07361b26a8")) { // ::Consent::{30:AE:A4:84:5F:0A},11a3e229084349bc25d97e29393ced1d\n
                                 String s = "ADPC: consent=";
+                                // besides the APDC header, only communicates for the purposes to which the user has consented
                                 for (Map.Entry me : purposes.entrySet()) {
                                     if(consents.containsKey((String) me.getValue())){
                                         if(consents.get((String) me.getValue())){
@@ -201,11 +200,13 @@ public class MainActivity extends AppCompatActivity
                         }
                     }
                 }
+                // once consent has been communicated, the GATT connection is closed
                 mBluetoothLeService.disconnect();
             }
         };
 
         Handler h = new Handler();
+        // a handler is required to palliate the asynchronous nature of BLE communication
         try {
             h.postDelayed(r, 2000);
             return true;
@@ -214,6 +215,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // this function defines what happens once a scanner is performed (asynchronously)
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 
         @Override
@@ -225,18 +227,18 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void run() {
                     if (deviceLe.getAddress().equals("7C:DF:A1:DA:E4:3A")) {
-                        //will have to be changed to compare UUID instead
+                        // MAC address is hardcoded, it should be changed to compare UUID instead
                         AdRecord adr = AdRecordUtils.parseScanRecordAsSparseArray(deviceLe.getScanRecord()).get(255);
                         byte[] uuid = deviceLe.getScanRecord();
                         byte[] byt = adr.getData();
-                        //retrieve the advertisement data containing the fragmented policy
+                        //retrieve the advertisement data containing the fragmented notice
                         try {
                             tmpADPC = PolicyEngine.reconstitutePolicies(byt, deviceLe.getAddress());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                         if (tmpADPC != null) {
-                            // if the policy is complete, store it and display it
+                            // if the notice is complete, store it and display it
                             // here we parse the notice received, to store it in a hashmap
                             purposes = PolicyEngine.parseADPCNotice(tmpADPC);
 
@@ -246,8 +248,10 @@ public class MainActivity extends AppCompatActivity
 
                             Log.i("heure après", String.valueOf(System.currentTimeMillis()));
                             mDeviceStore.addDevice(deviceLe);
+                            // once the scan is done, we bind to the GATT service in anticipation
                             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);    //we also bind the gatt service MAYBE TO CHANGE
                         }
+                        // notification of the adapter for the recyclerview
                         mAdapter.notifyDataSetChanged();
                     }
                 }
@@ -259,9 +263,9 @@ public class MainActivity extends AppCompatActivity
 
 
 
+    // we prepare the scan, requires permission amongst other things
     private void startScanPrepare() {
         // The COARSE_LOCATION permission is only needed after API 23 to do a BTLE scan
-        //
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PermissionsManager.getInstance().requestPermissionsIfNecessaryForResult(this,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, new PermissionsResultAction() {
@@ -284,6 +288,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // here we perform the scan when required
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void startScan() {
 //        List<ScanFilter> filters = new ArrayList<ScanFilter>();
@@ -305,6 +310,7 @@ public class MainActivity extends AppCompatActivity
 
         mBluetoothUtils.askUserToEnableBluetoothIfNeeded();
         if (isBluetoothOn && isBluetoothLePresent) {
+            // if the app has the bluetooth permission, we scan for one minute
             mScanner.scanLeDevice(60000, true);
             //duration is in ms
             invalidateOptionsMenu();
