@@ -12,9 +12,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/coyote"
+        android:icon="@drawable/a"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/coyote"
+        android:roundIcon="@drawable/a"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
