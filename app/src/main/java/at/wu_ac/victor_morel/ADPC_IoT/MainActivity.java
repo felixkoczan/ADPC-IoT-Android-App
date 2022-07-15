@@ -127,7 +127,18 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 sendConsent();
-                Snackbar.make(v, "You communicated your consents", Snackbar.LENGTH_LONG)
+                Snackbar.make(v, "You communicated your consent", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
+        // creation of the button for the communication of consent
+        FloatingActionButton sendWithdrawal = (FloatingActionButton) findViewById(R.id.withdrawal);
+        sendWithdrawal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendWithdrawal();
+                Snackbar.make(v, "You communicated your withdrawal", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -172,7 +183,6 @@ public class MainActivity extends AppCompatActivity
 
     // function called when the sendConsent button is clicked
     private boolean sendConsent() {
-        Log.i("test_demo", "before connection");
         mBluetoothLeService.connect("7C:DF:A1:DA:E4:3A");
         Runnable r = new Runnable() {
             @Override
@@ -196,6 +206,40 @@ public class MainActivity extends AppCompatActivity
                                 gattCharac.setValue(s.substring(0, s.length()-1));
                                 boolean consent = mBluetoothLeService.mBluetoothGatt.writeCharacteristic(gattCharac);
                                 Log.i("test_demo", String.valueOf(consent));
+                            }
+                        }
+                    }
+                }
+                // once consent has been communicated, the GATT connection is closed
+                mBluetoothLeService.disconnect();
+            }
+        };
+
+        Handler h = new Handler();
+        // a handler is required to palliate the asynchronous nature of BLE communication
+        try {
+            h.postDelayed(r, 2000);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // function called when the sendWithdrawal button is clicked
+    private boolean sendWithdrawal() {
+        mBluetoothLeService.connect("7C:DF:A1:DA:E4:3A");
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                BGS = mBluetoothLeService.getSupportedGattServices();
+                for (BluetoothGattService gattService : BGS) {
+                    if (gattService.getUuid().toString().equals("4fafc201-1fb5-459e-8fcc-c5c9c331914b")) {
+                        List<BluetoothGattCharacteristic> BGC = gattService.getCharacteristics();
+                        for (BluetoothGattCharacteristic gattCharac : BGC) {
+                            if (gattCharac.getUuid().toString().equals("beb5483e-36e1-4688-b7f5-ea07361b26a8")) { // ::Consent::{30:AE:A4:84:5F:0A},11a3e229084349bc25d97e29393ced1d\n
+                                String s = "ADPC: withdraw=*";
+                                gattCharac.setValue(s);
+                                boolean withdrawal = mBluetoothLeService.mBluetoothGatt.writeCharacteristic(gattCharac);
                             }
                         }
                     }
