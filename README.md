@@ -20,6 +20,7 @@ This application is for demonstration purposes only, it should not be used in an
     - a notice has to be parsed, the current set of purposes display is stored in a hashmap
     - once a notice has been fully recovered, the BLE service must be bound
     - when a user clicks on a toggle button, it modifies another hashmap (consents), later used to communicate the ID of purposes consented
+- A simple activity named AddDeviceActivity enables a user to manually add the MAC address of a known controller device, and to associate a mundane name to this device
 ### Presentation layer
 - the presentation is managed in res/, the code is in xml with a graphical equivalence, each acitivity (user interface) needs a codesheet in java/ and one in res/layout/
 - MainActivity's sister codesheet is activity_main.xml, the way the content is presented is defined in content_main.xml

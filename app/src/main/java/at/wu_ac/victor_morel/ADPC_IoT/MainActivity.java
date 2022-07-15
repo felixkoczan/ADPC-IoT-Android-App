@@ -75,11 +75,9 @@ public class MainActivity extends AppCompatActivity
     private HashMap<Integer, Integer> testBLETable = new HashMap<>();
     private String tmpADPC;
     private HashMap<String, String> purposes;
-    public static HashMap<String, Boolean> consents;
-
-    private final UUID[] mServiceUuids = {
-            UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
-    };
+    public static HashMap<String, Boolean> consents = new HashMap<>();
+    public static HashMap<String, String> devices = new HashMap<>();
+    public String currentDevice;
 
     // function to connect the GATT service of the ESP32
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -91,7 +89,7 @@ public class MainActivity extends AppCompatActivity
                 finish();
             }
             // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect("7C:DF:A1:DA:E4:3A");
+            mBluetoothLeService.connect(currentDevice);
             BGS = mBluetoothLeService.getSupportedGattServices();
         }
 
@@ -156,8 +154,10 @@ public class MainActivity extends AppCompatActivity
         PolicyEngine.retrievedPolicies = new HashMap<>();
         PolicyEngine.retrievedPolicy = new HashMap<>();
         // datastructure used to store the APDC id of purposes for which one consents when one clicks on the sendConsent button
-        consents = new HashMap<>();
-
+        if (!devices.containsKey("7C:DF:A1:DA:E4:3A")){
+            // demo device, just for demonstration purposes
+            devices.put("7C:DF:A1:DA:E4:3A", "Demo device");
+        }
         // Get a handle to the RecyclerView.
         mRecyclerView = findViewById(R.id.recyclerview);
 // Create an adapter and supply the data to be displayed.
@@ -183,14 +183,13 @@ public class MainActivity extends AppCompatActivity
 
     // function called when the sendConsent button is clicked
     private boolean sendConsent() {
-        mBluetoothLeService.connect("7C:DF:A1:DA:E4:3A");
+        mBluetoothLeService.connect(currentDevice);
         Runnable r = new Runnable() {
             @Override
             public void run() {
                 BGS = mBluetoothLeService.getSupportedGattServices();
                 for (BluetoothGattService gattService : BGS) {
                     if (gattService.getUuid().toString().equals("4fafc201-1fb5-459e-8fcc-c5c9c331914b")) {
-                        Log.i("test_demo", "when uuid found");
                         List<BluetoothGattCharacteristic> BGC = gattService.getCharacteristics();
                         for (BluetoothGattCharacteristic gattCharac : BGC) {
                             if (gattCharac.getUuid().toString().equals("beb5483e-36e1-4688-b7f5-ea07361b26a8")) { // ::Consent::{30:AE:A4:84:5F:0A},11a3e229084349bc25d97e29393ced1d\n
@@ -205,7 +204,6 @@ public class MainActivity extends AppCompatActivity
                                 }
                                 gattCharac.setValue(s.substring(0, s.length()-1));
                                 boolean consent = mBluetoothLeService.mBluetoothGatt.writeCharacteristic(gattCharac);
-                                Log.i("test_demo", String.valueOf(consent));
                             }
                         }
                     }
@@ -227,7 +225,7 @@ public class MainActivity extends AppCompatActivity
 
     // function called when the sendWithdrawal button is clicked
     private boolean sendWithdrawal() {
-        mBluetoothLeService.connect("7C:DF:A1:DA:E4:3A");
+        mBluetoothLeService.connect(currentDevice);
         Runnable r = new Runnable() {
             @Override
             public void run() {
@@ -244,7 +242,7 @@ public class MainActivity extends AppCompatActivity
                         }
                     }
                 }
-                // once consent has been communicated, the GATT connection is closed
+                // once withdrawal has been communicated, the GATT connection is closed
                 mBluetoothLeService.disconnect();
             }
         };
@@ -270,7 +268,8 @@ public class MainActivity extends AppCompatActivity
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (deviceLe.getAddress().equals("7C:DF:A1:DA:E4:3A")) {
+                    if (devices.containsKey(deviceLe.getAddress())) {
+                        currentDevice = deviceLe.getAddress();
                         // MAC address is hardcoded, it should be changed to compare UUID instead
                         AdRecord adr = AdRecordUtils.parseScanRecordAsSparseArray(deviceLe.getScanRecord()).get(255);
                         byte[] uuid = deviceLe.getScanRecord();
@@ -290,7 +289,6 @@ public class MainActivity extends AppCompatActivity
                                 deviceList.addLast((String) me.getValue()); //use devicestore instead
                             }
 
-                            Log.i("heure après", String.valueOf(System.currentTimeMillis()));
                             mDeviceStore.addDevice(deviceLe);
                             // once the scan is done, we bind to the GATT service in anticipation
                             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);    //we also bind the gatt service MAYBE TO CHANGE
@@ -399,7 +397,12 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-         if (id == R.id.nav_manage) {
+        if (id == R.id.nav_add_rule) {
+            Intent addRuleIntent = new Intent(this,
+                    AddDeviceActivity.class);
+            startActivity(addRuleIntent);
+            // Handle the camera action
+        } else if (id == R.id.nav_manage) {
             Intent settingsIntent = new Intent(this,
                     SettingsActivity.class);
             startActivity(settingsIntent);

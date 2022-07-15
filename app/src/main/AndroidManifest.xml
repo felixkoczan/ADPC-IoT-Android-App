@@ -30,6 +30,11 @@
         </activity>
 
         <activity
+            android:name="at.wu_ac.victor_morel.ADPC_IoT.AddDeviceActivity"
+            android:label="@string/title_activity_add_device"
+            android:parentActivityName="at.wu_ac.victor_morel.ADPC_IoT.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
             android:name="at.wu_ac.victor_morel.ADPC_IoT.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:parentActivityName="at.wu_ac.victor_morel.ADPC_IoT.MainActivity">
