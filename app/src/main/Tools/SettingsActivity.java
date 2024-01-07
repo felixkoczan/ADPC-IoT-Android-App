@@ -1,5 +1,3 @@
-package at.wu_ac.victor_morel.ADPC_IoT;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;

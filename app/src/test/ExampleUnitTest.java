@@ -1,5 +1,3 @@
-package at.wu_ac.victor_morel.ADPC_IoT;
-
 import org.junit.Test;
 
 import static org.junit.Assert.*;

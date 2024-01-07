@@ -1,5 +1,3 @@
-package at.wu_ac.victor_morel.ADPC_IoT;
-
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;

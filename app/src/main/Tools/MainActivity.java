@@ -1,5 +1,3 @@
-package at.wu_ac.victor_morel.ADPC_IoT;
-
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

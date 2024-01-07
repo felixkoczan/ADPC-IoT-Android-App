@@ -14,48 +14,50 @@
  * limitations under the License.
  */
 
-package at.wu_ac.victor_morel.ADPC_IoT.Tools;
 
-import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Binder;
-import android.os.IBinder;
-import android.util.Log;
-
-import java.util.List;
-
-/**
- * Service for managing connection and data communication with a GATT server hosted on a
- * given Bluetooth LE device.
- */
-public class BluetoothLeService extends Service {
-    public final static String ACTION_GATT_CONNECTED = BluetoothLeService.class.getName() + ".ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_CONNECTING = BluetoothLeService.class.getName() + ".ACTION_GATT_CONNECTING";
-    public final static String ACTION_GATT_DISCONNECTED = BluetoothLeService.class.getName() + ".ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED = BluetoothLeService.class.getName() + ".ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE = BluetoothLeService.class.getName() + ".ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA_RAW = BluetoothLeService.class.getName() + ".EXTRA_DATA_RAW";
-    public final static String EXTRA_UUID_CHAR = BluetoothLeService.class.getName() + ".EXTRA_UUID_CHAR";
-    private final static String TAG = BluetoothLeService.class.getSimpleName();
-    private final IBinder mBinder = new LocalBinder();
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
-    private String mBluetoothDeviceAddress;
-    public BluetoothGatt mBluetoothGatt;
-    public State mConnectionState = State.DISCONNECTED;
-
-    // Implements callback methods for GATT events that the app cares about.  For example,
-    // connection change and services discovered.
-    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+ import android.bluetooth.BluetoothAdapter;
+ import android.bluetooth.BluetoothDevice;
+ import android.bluetooth.BluetoothGatt;
+ import android.bluetooth.BluetoothGattCallback;
+ import android.bluetooth.BluetoothGattCharacteristic;
+ import android.bluetooth.BluetoothGattService;
+ import android.bluetooth.BluetoothManager;
+ import android.bluetooth.BluetoothProfile;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.os.Binder;
+ import android.os.IBinder;
+ import android.util.Log;
+ 
+ import java.util.List;
+ 
+ /**
+  * Service for managing the Bluetooth LE data communication.
+  * Handles connection, disconnection, and data exchange with a Bluetooth LE device.
+  */
+ public class BluetoothLeService extends Service {
+     // Action constants reported as a broadcast during connection changes and service discovery
+     public final static String ACTION_GATT_CONNECTED = BluetoothLeService.class.getName() + ".ACTION_GATT_CONNECTED";
+     public final static String ACTION_GATT_CONNECTING = BluetoothLeService.class.getName() + ".ACTION_GATT_CONNECTING";
+     public final static String ACTION_GATT_DISCONNECTED = BluetoothLeService.class.getName() + ".ACTION_GATT_DISCONNECTED";
+     public final static String ACTION_GATT_SERVICES_DISCOVERED = BluetoothLeService.class.getName() + ".ACTION_GATT_SERVICES_DISCOVERED";
+     public final static String ACTION_DATA_AVAILABLE = BluetoothLeService.class.getName() + ".ACTION_DATA_AVAILABLE";
+     public final static String EXTRA_DATA_RAW = BluetoothLeService.class.getName() + ".EXTRA_DATA_RAW";
+     public final static String EXTRA_UUID_CHAR = BluetoothLeService.class.getName() + ".EXTRA_UUID_CHAR";
+ 
+     private final static String TAG = BluetoothLeService.class.getSimpleName();
+     private final IBinder mBinder = new LocalBinder();
+     private BluetoothManager mBluetoothManager;
+     private BluetoothAdapter mBluetoothAdapter;
+     private String mBluetoothDeviceAddress;
+     public BluetoothGatt mBluetoothGatt;
+     public State mConnectionState = State.DISCONNECTED;
+ 
+     /**
+      * Callback methods for GATT events that are important to the application.
+      * These include connection status changes and services discovery.
+      */
+     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
@@ -104,11 +106,18 @@ public class BluetoothLeService extends Service {
         }
     };
 
+    /**
+     * Broadcasts updates to the broadcast receivers registered to listen to various actions.
+     * @param action The action string representing the event occurred.
+     */
     private void broadcastUpdate(final String action) {
-        final Intent intent = new Intent(action);
-        sendBroadcast(intent);
     }
 
+     /**
+     * Broadcasts updates when a characteristic's data is available.
+     * @param action The action string representing the event occurred.
+     * @param characteristic The characteristic containing the data.
+     */
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
         intent.putExtra(EXTRA_UUID_CHAR, characteristic.getUuid().toString());
@@ -310,12 +319,18 @@ public class BluetoothLeService extends Service {
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
     }
 
+     /**
+     * Binder class to return an instance of BluetoothLeService.
+     */
     public class LocalBinder extends Binder {
         public BluetoothLeService getService() {
             return BluetoothLeService.this;
         }
     }
 
+    /**
+     * Enum to represent the connection state.
+     */
     public enum State {
         DISCONNECTED,
         CONNECTING,
